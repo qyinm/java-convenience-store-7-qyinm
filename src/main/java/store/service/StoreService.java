@@ -1,10 +1,14 @@
 package store.service;
 
+import static store.exception.store.StoreErrorCode.EXCEED_PRODUCT_QUANTITY;
+import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
+
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.function.Function;
 import store.domain.Product;
 import store.domain.Promotion;
+import store.exception.StoreException;
 import store.repository.StoreRepository;
 
 public class StoreService {
@@ -42,5 +46,51 @@ public class StoreService {
 
         Boolean isSufficientQuantity = promotionProduct.map(isGreaterQuantityThan(quantity)).orElse(false);
         return promotion.isAvailableToGetBonus(quantity) && isSufficientQuantity;
+    }
+
+    public Product getGeneralProduct(String productName) {
+        validateHasProductWithName(productName);
+
+        Product product = storeRepository.findGeneralProductByName(productName).get();
+        return product;
+    }
+
+    public Product purchaseGeneralProduct(String productName, BigDecimal quantity) {
+        Product generalProduct = getGeneralProduct(productName);
+
+        storeRepository.updateGeneralProduct(productName, generalProduct.getQuantity().subtract(quantity));
+        return generalProduct;
+    }
+
+    private void validateHasProductWithName(String productName) {
+        storeRepository.findPromotionProductByName(productName)
+                .or(() -> storeRepository.findGeneralProductByName(productName))
+                .orElseThrow(() -> new StoreException(NOT_FOUND_PRODUCT));
+    }
+
+    public Product getPromotionProduct(String productName) {
+        validateHasProductWithName(productName);
+
+        Product product = storeRepository.findPromotionProductByName(productName).get();
+        return product;
+    }
+
+    public Product purchasePromotionProduct(String productName, BigDecimal quantity) {
+        Product promotionProduct = getPromotionProduct(productName);
+
+        storeRepository.updatePromotionProduct(productName, promotionProduct.getQuantity().subtract(quantity));
+        return promotionProduct;
+    }
+
+    public void validatePurchasableProduct(String productName, BigDecimal quantity) {
+        BigDecimal promotionQuantity = storeRepository.findPromotionProductByName(productName).map(Product::getQuantity)
+                .orElse(BigDecimal.ZERO);
+        BigDecimal generalQuantity = storeRepository.findGeneralProductByName(productName).map(Product::getQuantity)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal totalQuantity = promotionQuantity.add(generalQuantity);
+        if (quantity.compareTo(totalQuantity) > 0) {
+            throw new StoreException(EXCEED_PRODUCT_QUANTITY);
+        }
     }
 }

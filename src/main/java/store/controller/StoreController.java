@@ -8,7 +8,6 @@ import store.domain.Product;
 import store.dtos.ItemInputDto;
 import store.service.StoreService;
 import store.view.InputView;
-import store.view.OutputView;
 
 public class StoreController {
 
@@ -32,7 +31,7 @@ public class StoreController {
     private List<Item> processItem(ItemInputDto itemDto) {
         String itemName = itemDto.itemName();
         BigDecimal quantity = itemDto.quantity();
-        storeService.isPurchasableProduct(itemName, quantity);
+        storeService.validatePurchasableProduct(itemName, quantity);
 
         if (!storeService.hasActivePromotion(itemName)) {
             return List.of(createGeneralItem(itemName, quantity));
