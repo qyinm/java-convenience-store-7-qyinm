@@ -111,4 +111,34 @@ class StoreServiceTest {
         // Then
         assertThat(result).isFalse();
     }
+
+    @Test
+    @DisplayName("프로모션 상품이 보너스 받을 수량을 만족할 때 true 반환")
+    void 프로모션_상품_보너스_충분_수량일때_true() {
+        // When
+        boolean result = storeService.isSufficientQuantityToGetBonusProduct("콜라", BigDecimal.valueOf(2));
+
+        // Then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("프로모션 상품이 보너스 받을 수량을 만족하지 않을 때 false 반환")
+    void 프로모션_상품_보너스_충분하지않은_수량일때_false() {
+        // When
+        boolean result = storeService.isSufficientQuantityToGetBonusProduct("사이다", BigDecimal.valueOf(1));
+
+        // Then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("프로모션 상품이 보너스 받을 수량을 줄 재고가 없을 때 false 반환")
+    void 프로모션_상품_보너스_충분하지않은_수량을_줄_재고가_없을때_false() {
+        // When
+        boolean result = storeService.isSufficientQuantityToGetBonusProduct("사이다", BigDecimal.valueOf(1001));
+
+        // Then
+        assertThat(result).isFalse();
+    }
 }
