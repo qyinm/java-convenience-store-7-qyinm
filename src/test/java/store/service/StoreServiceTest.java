@@ -1,10 +1,11 @@
 package store.service;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,34 +13,29 @@ import store.domain.Product;
 import store.domain.Promotion;
 import store.repository.StoreRepository;
 
-import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
-
 class StoreServiceTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private StoreRepository storeRepository;
     private StoreService storeService;
 
-    private Product productWithPromotion;
-    private Product productWithoutPromotion;
-
     @BeforeEach
     void setUp() {
-        // StoreRepository에 데이터를 넣어줌
-        Set<Product> products = new HashSet<>();
+        ;
 
-        // 프로모션이 있는 상품
+        // 프로모션
         Promotion promotion = new Promotion("탄산2+1", BigDecimal.valueOf(2), BigDecimal.valueOf(1),
                 LocalDate.parse("2024-01-01", DATE_FORMATTER), LocalDate.parse("2024-12-31", DATE_FORMATTER));
-        productWithPromotion = new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), promotion);
+        Promotion unactivePromotion = new Promotion("탄산1+1", BigDecimal.valueOf(2), BigDecimal.valueOf(1),
+                LocalDate.parse("2023-01-01", DATE_FORMATTER), LocalDate.parse("2023-12-31", DATE_FORMATTER));
 
-        // 프로모션이 없는 상품
-        productWithoutPromotion = new Product("사이다", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), null);
 
-        products.add(productWithPromotion);
-        products.add(productWithoutPromotion);
+        Set<Product> products = Set.of(new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), promotion),
+                new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), promotion),
+                new Product("사이다", BigDecimal.valueOf(1000), BigDecimal.valueOf(5), promotion),
+                new Product("환타", BigDecimal.valueOf(1000), BigDecimal.valueOf(5), unactivePromotion),
+                new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), null),
+                new Product("사이다", BigDecimal.valueOf(1000), BigDecimal.valueOf(5), null));
 
         // StoreRepository 직접 구현
         storeRepository = new StoreRepository(products);
@@ -60,7 +56,7 @@ class StoreServiceTest {
     @DisplayName("프로모션이 적용되지 않은 상품은 false 반환")
     void 프로모션_적용되지_않은_상품_false() {
         // When
-        boolean result = storeService.hasActivePromotion("사이다");
+        boolean result = storeService.hasActivePromotion("환타");
 
         // Then
         assertThat(result).isFalse();
@@ -71,6 +67,46 @@ class StoreServiceTest {
     void 존재하지_않는_프로모션_상품은_false() {
         // When
         boolean result = storeService.hasActivePromotion("오렌지");
+
+        // Then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("일반 상품이 충분한 수량일 때, true 반환")
+    void 일반_상품_충분한_수량일때_true() {
+        // When
+        boolean result = storeService.isSufficientQuantityGeneralProduct("콜라", BigDecimal.valueOf(5));
+
+        // Then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("일반 상품이 부족한 수량일 때, false 반환")
+    void 일반_상품_부족한_수량일때_false() {
+        // When
+        boolean result = storeService.isSufficientQuantityGeneralProduct("사이다", BigDecimal.valueOf(10));
+
+        // Then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("프로모션 상품이 충분한 수량일 때, true 반환")
+    void 프로모션_상품_충분한_수량일때_true() {
+        // When
+        boolean result = storeService.isSufficientQuantityPromotionProduct("콜라", BigDecimal.valueOf(5));
+
+        // Then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("프로모션 상품이 부족한 수량일 때, false 반환")
+    void 프로모션_상품_부족한_수량일때_false() {
+        // When
+        boolean result = storeService.isSufficientQuantityPromotionProduct("사이다", BigDecimal.valueOf(10));
 
         // Then
         assertThat(result).isFalse();
