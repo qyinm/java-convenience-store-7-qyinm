@@ -5,6 +5,7 @@ import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import store.domain.Product;
 import store.domain.Promotion;
@@ -92,5 +93,9 @@ public class StoreService {
         if (quantity.compareTo(totalQuantity) > 0) {
             throw new StoreException(EXCEED_PRODUCT_QUANTITY);
         }
+    }
+
+    public Set<Product> getAllProducts() {
+        return storeRepository.getAllProducts();
     }
 }

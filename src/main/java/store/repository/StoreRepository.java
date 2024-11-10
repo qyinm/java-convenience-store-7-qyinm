@@ -48,4 +48,8 @@ public class StoreRepository {
         findPromotionProduct.updateQuantity(updatedQuantity);
         return findPromotionProduct;
     }
+
+    public Set<Product> getAllProducts() {
+        return products;
+    }
 }
