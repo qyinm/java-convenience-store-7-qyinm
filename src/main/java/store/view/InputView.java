@@ -1,6 +1,7 @@
 package store.view;
 
 import static camp.nextstep.edu.missionutils.Console.readLine;
+import static store.constants.view.InputValidatePatternConstants.VALID_INPUT_ASK_ANSWER;
 import static store.constants.view.InputValidatePatternConstants.VALID_INPUT_ITEM_PATTERN;
 import static store.exception.input.InputErrorCode.INVALID_INPUT_FORM;
 
@@ -14,6 +15,8 @@ import store.exception.StoreException;
 public class InputView {
     private static final Pattern USER_ITEM_INPUT_DELIMITER_PATTERN = Pattern.compile(",");
     private static final Pattern ITEM_SPLIT_PATTERN = Pattern.compile("-");
+    private static final String YES = "Y";
+    private static final String NO = "N";
 
     public static List<ItemInputDto> getUserItemInput() {
         OutputView.printUserItemInputPrefix();
@@ -26,15 +29,41 @@ public class InputView {
     }
 
     private static void validateInputItemFrom(String userInput) {
-        if (VALID_INPUT_ITEM_PATTERN.isValid(userInput)) {
+        if (!VALID_INPUT_ITEM_PATTERN.isValid(userInput)) {
             throw new StoreException(INVALID_INPUT_FORM);
         }
     }
 
+    // 아이템 문자열을 ItemInputDto로 변환하는 함수
     private static Function<String, ItemInputDto> getItemInputDto() {
         return item -> {
+            item = item.replaceAll("[\\[|\\]]", "");
             String[] split = ITEM_SPLIT_PATTERN.split(item);
             return new ItemInputDto(split[0], new BigDecimal(split[1]));
         };
+    }
+
+    public static boolean askUserGetMoreBonusProduct(String itemName, BigDecimal bonusPrice) {
+        OutputView.printAskGetMoreBonusProducts(itemName, bonusPrice);
+
+        String userInput = readLine();
+        validateYesOrNoInputForm(userInput);
+
+        return YES.equals(userInput);
+    }
+
+    private static void validateYesOrNoInputForm(String userInput) {
+        if (!VALID_INPUT_ASK_ANSWER.isValid(userInput)) {
+            throw new StoreException(INVALID_INPUT_FORM);
+        }
+    }
+
+    public static boolean askFullPricePurchase(String itemName, BigDecimal quantity) {
+        OutputView.printAskFullPricePurchasePrefix(itemName, quantity);
+
+        String userInput = readLine();
+        validateYesOrNoInputForm(userInput);
+
+        return YES.equals(userInput);
     }
 }
