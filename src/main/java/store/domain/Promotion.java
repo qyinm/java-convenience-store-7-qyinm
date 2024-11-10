@@ -48,4 +48,8 @@ public class Promotion {
         return (promotionStartDate.isEqual(nowDate) || promotionStartDate.isBefore(nowDate)) && (
                 promotionEndDate.isEqual(nowDate) || promotionEndDate.isAfter(nowDate));
     }
+
+    public boolean isAvailableToGetBonus(BigDecimal bonus) {
+        return bonus.remainder(buyAmount.add(getAmount)).compareTo(buyAmount) == 0;
+    }
 }
