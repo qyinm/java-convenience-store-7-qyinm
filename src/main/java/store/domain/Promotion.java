@@ -1,7 +1,10 @@
 package store.domain;
 
+import static camp.nextstep.edu.missionutils.DateTimes.now;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Promotion {
     private final String name;
@@ -38,5 +41,11 @@ public class Promotion {
 
     public LocalDate getPromotionEndDate() {
         return promotionEndDate;
+    }
+
+    public boolean isActive() {
+        LocalDate nowDate = now().toLocalDate();
+        return (promotionStartDate.isEqual(nowDate) || promotionStartDate.isBefore(nowDate)) && (
+                promotionEndDate.isEqual(nowDate) || promotionEndDate.isAfter(nowDate));
     }
 }
