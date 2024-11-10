@@ -6,7 +6,7 @@ import java.util.Optional;
 public class Product {
     private final String name;
     private final BigDecimal price;
-    private final BigDecimal quantity;
+    private BigDecimal quantity;
     private final Promotion promotion;
 
     public Product(String name, BigDecimal price, BigDecimal quantity, Promotion promotion) {
@@ -30,5 +30,9 @@ public class Product {
 
     public Optional<Promotion> getPromotion() {
         return Optional.ofNullable(promotion);
+    }
+
+    public void updateQuantity(BigDecimal newQuantity) {
+        this.quantity = newQuantity;
     }
 }
