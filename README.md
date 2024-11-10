@@ -86,7 +86,7 @@
 - [X] 상품명 인자 전달 -> 상품명에 해당하는 현재 프로모션 상품 재고상태 상품 반환
 
 ### Parser
-- [ ] promotions.md, products.md 파싱 후 repository 객체 저장
+- [X] promotions.md, products.md 파싱 후 repository 객체 저장
 
 ### 도메인
 #### Promotion
