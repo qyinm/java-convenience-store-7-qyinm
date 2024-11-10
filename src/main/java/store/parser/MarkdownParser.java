@@ -24,7 +24,7 @@ public class MarkdownParser {
     }
 
     public static Set<Product> parseProducts(String filePath, Map<String, Promotion> promotionMap) {
-        return new HashSet<>(parse(filePath, (line) -> ProductParser.parse(filePath, promotionMap)));
+        return new HashSet<>(parse(filePath, (line) -> ProductParser.parse(line, promotionMap)));
     }
 
     public static <T> List<T> parse(String filePath, LineParser<T> parser) {
