@@ -1,5 +1,6 @@
 package store;
 
+import camp.nextstep.edu.missionutils.Console;
 import java.util.Map;
 import java.util.Set;
 import store.constants.parser.FileConstants;
@@ -12,11 +13,7 @@ import store.service.StoreService;
 
 public class Application {
     public static void main(String[] args) {
-        Map<String, Promotion> promotionMap = MarkdownParser.parsePromotions(
-                FileConstants.PROMOTIONS_FILE_PATH.getFilePath());
-        Set<Product> products = MarkdownParser.parseProducts(FileConstants.PRODUCTIONS_FILE_PATH.getFilePath(),
-                promotionMap);
-        StoreRepository storeRepository = new StoreRepository(products);
+        StoreRepository storeRepository = new StoreRepository(getProductSet());
         StoreService storeService = new StoreService(storeRepository);
         StoreController storeController = new StoreController(storeService);
 
@@ -25,5 +22,13 @@ public class Application {
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
+        Console.close();
+    }
+
+    private static Set<Product> getProductSet() {
+        Map<String, Promotion> promotionMap = MarkdownParser.parsePromotions(
+                FileConstants.PROMOTIONS_FILE_PATH.getFilePath());
+        return MarkdownParser.parseProducts(FileConstants.PRODUCTIONS_FILE_PATH.getFilePath(),
+                promotionMap);
     }
 }
