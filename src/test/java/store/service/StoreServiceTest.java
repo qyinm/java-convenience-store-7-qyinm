@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import store.domain.Item;
 import store.domain.Product;
 import store.domain.Promotion;
+import store.dtos.ReceiptDto;
 import store.exception.StoreException;
 import store.repository.StoreRepository;
 
@@ -31,7 +32,6 @@ class StoreServiceTest {
                 LocalDate.parse("2024-01-01", DATE_FORMATTER), LocalDate.parse("2024-12-31", DATE_FORMATTER));
         Promotion unactivePromotion = new Promotion("탄산1+1", BigDecimal.valueOf(2), BigDecimal.valueOf(1),
                 LocalDate.parse("2023-01-01", DATE_FORMATTER), LocalDate.parse("2023-12-31", DATE_FORMATTER));
-
 
         Set<Product> products = Set.of(new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), promotion),
                 new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), promotion),
@@ -219,5 +219,22 @@ class StoreServiceTest {
         assertThat(expectedPromotionItem.quantity()).isEqualTo(BigDecimal.valueOf(10)); // 총 15 구매 중 프로모션 10개
         assertThat(expectedGeneralItem.product().getName()).isEqualTo("콜라");
         assertThat(expectedGeneralItem.quantity()).isEqualTo(BigDecimal.valueOf(5)); // 남은 5개 일반 5개
+    }
+
+    @Test
+    @DisplayName("사용자 구매 계산")
+    void 사용자_구매_계산() {
+        // Given
+        List<Item> cart = List.of(new Item(storeService.getPromotionProduct("콜라"), BigDecimal.valueOf(5)),
+                new Item(storeService.getGeneralProduct("사이다"), BigDecimal.valueOf(2)));
+
+        // When
+        ReceiptDto receipt = storeService.calculateUserPurchase(cart, true);
+
+        // Then
+        assertThat(receipt.totalPay()).isNotNull();
+        // 콜라: 2+1로 4000, 바나나: 2000 - 600(멤버십 할인)
+        assertThat(receipt.willPayAmounts()).isEqualTo(BigDecimal.valueOf(5400));
+        assertThat(receipt.membershipDiscountPay()).isEqualTo(BigDecimal.valueOf(600));
     }
 }
