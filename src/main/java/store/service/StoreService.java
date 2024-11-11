@@ -110,9 +110,9 @@ public class StoreService {
     }
 
     public ReceiptDto calculateUserPurchase(Cart cart, boolean applyMembershipDiscount) {
-        BigDecimal totalPay = cart.getTotalPrice();
+        BigDecimal totalPay = cart.getTotalItemsAmount();
         Cart promotionBonusItems = cart.getPromotionBonusItems();
-        BigDecimal promotionDiscountPay = promotionBonusItems.getTotalPrice();
+        BigDecimal promotionDiscountPay = promotionBonusItems.getTotalItemsAmount();
         BigDecimal membershipDiscountPay = getMembershipDiscountPay(cart, promotionBonusItems, applyMembershipDiscount);
         BigDecimal willPayAmounts = totalPay.subtract(promotionDiscountPay).subtract(membershipDiscountPay);
 
