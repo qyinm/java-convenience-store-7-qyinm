@@ -152,4 +152,17 @@ class StoreServiceTest {
         assertThat(product).isNotNull();
         assertThat(product.getName()).isEqualTo("콜라");
     }
+
+    @Test
+    @DisplayName("일반 상품을 구매하면 수량이 차감된다")
+    void 일반_상품_구매_시_수량_차감() {
+        // Given
+        Product product = storeService.getGeneralProduct("콜라");
+
+        // When
+        Product updatedProduct = storeService.purchaseGeneralProduct("콜라", BigDecimal.valueOf(5));
+
+        // Then
+        assertThat(updatedProduct.getQuantity()).isEqualTo(BigDecimal.valueOf(5));  // 10 - 5 = 5
+    }
 }
