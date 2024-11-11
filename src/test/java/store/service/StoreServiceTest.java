@@ -165,4 +165,15 @@ class StoreServiceTest {
         // Then
         assertThat(updatedProduct.getQuantity()).isEqualTo(BigDecimal.valueOf(5));  // 10 - 5 = 5
     }
+
+    @Test
+    @DisplayName("프로모션 상품이 존재하면 해당 상품을 반환")
+    void 프로모션_상품_존재_시_반환() {
+        // When
+        Product product = storeService.getPromotionProduct("콜라");
+
+        // Then
+        assertThat(product).isNotNull();
+        assertThat(product.getName()).isEqualTo("콜라");
+    }
 }
