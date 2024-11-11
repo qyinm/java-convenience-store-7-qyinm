@@ -88,12 +88,13 @@ public class StoreService {
     }
 
     public void validatePurchasableProduct(String productName, BigDecimal quantity) {
-        BigDecimal promotionQuantity = storeRepository.findPromotionProductByName(productName).map(Product::getQuantity)
-                .orElse(BigDecimal.ZERO);
-        BigDecimal generalQuantity = storeRepository.findGeneralProductByName(productName).map(Product::getQuantity)
-                .orElse(BigDecimal.ZERO);
+        validateHasProductWithName(productName);
 
-        BigDecimal totalQuantity = promotionQuantity.add(generalQuantity);
+        BigDecimal totalQuantity = storeRepository.getAllProducts().stream()
+                .filter(product -> product.getName().equals(productName))
+                .map(Product::getQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         if (quantity.compareTo(totalQuantity) > 0) {
             throw new StoreException(EXCEED_PRODUCT_QUANTITY);
         }
