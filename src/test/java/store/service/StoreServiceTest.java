@@ -7,10 +7,12 @@ import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.domain.Item;
 import store.domain.Product;
 import store.domain.Promotion;
 import store.exception.StoreException;
@@ -198,5 +200,24 @@ class StoreServiceTest {
         assertThatThrownBy(() -> storeService.getGeneralProduct("오렌지"))
                 .isInstanceOf(StoreException.class)
                 .hasMessageContaining(NOT_FOUND_PRODUCT.getMessage());
+    }
+
+    @Test
+    @DisplayName("프로모션, 일반 상품을 혼합하여 반환")
+    void 프로모션_일반_상품_혼합_반환() {
+        // Given
+        Product promotionProduct = storeService.getPromotionProduct("콜라");
+
+        // When
+        List<Item> mixedItems = storeService.getMixedItems("콜라", BigDecimal.valueOf(15), promotionProduct);
+
+        // Then
+        assertThat(mixedItems).hasSize(2);
+        Item expectedPromotionItem = mixedItems.get(0);
+        Item expectedGeneralItem = mixedItems.get(1);
+        assertThat(expectedPromotionItem.product().getName()).isEqualTo("콜라");
+        assertThat(expectedPromotionItem.quantity()).isEqualTo(BigDecimal.valueOf(10)); // 총 15 구매 중 프로모션 10개
+        assertThat(expectedGeneralItem.product().getName()).isEqualTo("콜라");
+        assertThat(expectedGeneralItem.quantity()).isEqualTo(BigDecimal.valueOf(5)); // 남은 5개 일반 5개
     }
 }
