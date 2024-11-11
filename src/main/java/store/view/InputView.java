@@ -29,7 +29,7 @@ public class InputView {
     }
 
     private static void validateInputItemFrom(String userInput) {
-        if (!VALID_INPUT_ITEM_PATTERN.isValid(userInput)) {
+        if (VALID_INPUT_ITEM_PATTERN.isInvalidPattern(userInput)) {
             throw new StoreException(INVALID_INPUT_FORM);
         }
     }
@@ -50,7 +50,7 @@ public class InputView {
     }
 
     private static void validateYesOrNoInputForm(String userInput) {
-        if (!VALID_INPUT_ASK_ANSWER.isValid(userInput)) {
+        if (VALID_INPUT_ASK_ANSWER.isInvalidPattern(userInput)) {
             throw new StoreException(INVALID_INPUT_FORM);
         }
     }

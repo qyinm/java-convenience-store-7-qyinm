@@ -12,7 +12,7 @@ public enum InputValidatePatternConstants {
         this.validatePattern = Pattern.compile(validatePattern);
     }
 
-    public boolean isValid(String input) {
-        return validatePattern.matcher(input).matches();
+    public boolean isInvalidPattern(String input) {
+        return !validatePattern.matcher(input).matches();
     }
 }

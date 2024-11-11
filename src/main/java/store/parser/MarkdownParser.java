@@ -50,7 +50,6 @@ public class MarkdownParser {
 
     public static <T> List<T> parse(String filePath, LineParser<T> parser) {
         Path path = Paths.get(filePath);
-
         try (Stream<String> lines = Files.lines(path)) {
             return lines.skip(1)
                     .map(parser::parse)
