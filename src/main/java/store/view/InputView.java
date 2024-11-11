@@ -71,4 +71,10 @@ public class InputView {
 
         return YES.equals(userInput);
     }
+
+    public static boolean askMoreGetShopping() {
+        OutputView.printAskMoreShoppingPrefix();
+
+        return askYesOrNo();
+    }
 }

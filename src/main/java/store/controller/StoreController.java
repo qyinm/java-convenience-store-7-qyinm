@@ -21,12 +21,14 @@ public class StoreController {
     }
 
     public void runStore() {
-        noticeCurrentInventory();
-        List<Item> cart = getUserWantToBuyItems();
-        boolean applyMembershipDiscount = InputView.askGetMembershipDiscount();
+        do {
+            noticeCurrentInventory();
+            List<Item> cart = getUserWantToBuyItems();
+            boolean applyMembershipDiscount = InputView.askGetMembershipDiscount();
 
-        ReceiptDto receiptDto = storeService.calculateUserPurchase(cart, applyMembershipDiscount);
-        OutputView.printReceipt(cart, receiptDto);
+            ReceiptDto receiptDto = storeService.calculateUserPurchase(cart, applyMembershipDiscount);
+            OutputView.printReceipt(cart, receiptDto);
+        } while (InputView.askMoreGetShopping());
     }
 
     private List<Item> getUserWantToBuyItems() {
