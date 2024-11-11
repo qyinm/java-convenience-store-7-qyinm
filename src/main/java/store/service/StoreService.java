@@ -103,10 +103,14 @@ public class StoreService {
     }
 
     public List<Item> getMixedItems(String itemName, BigDecimal quantity, Product promotionProduct) {
-        return List.of(new Item(purchasePromotionProduct(itemName, promotionProduct.getQuantity()),
-                        promotionProduct.getQuantity()),
-                new Item(purchaseGeneralProduct(itemName, quantity.subtract(promotionProduct.getQuantity())),
-                        quantity.subtract(promotionProduct.getQuantity())));
+        BigDecimal willBuyPromotionProductQuantity = promotionProduct.getQuantity();
+        BigDecimal willBuyGeneralProductQuantity = quantity.subtract(willBuyPromotionProductQuantity);
+        
+        return List.of(new Item(purchasePromotionProduct(itemName, willBuyPromotionProductQuantity),
+                        willBuyPromotionProductQuantity),
+                new Item(purchaseGeneralProduct(itemName, willBuyGeneralProductQuantity),
+                        willBuyGeneralProductQuantity)
+        );
     }
 
     private BigDecimal calculateMembershipDiscountAmount(List<Item> cart, List<Item> promotionBonusItems) {
@@ -145,7 +149,6 @@ public class StoreService {
     }
 
     private BigDecimal calculateAllItemsTotalPrice(List<Item> promotionBonusItems) {
-        return promotionBonusItems.stream().map(Item::getTotalQuantity)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return promotionBonusItems.stream().map(Item::getTotalQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
