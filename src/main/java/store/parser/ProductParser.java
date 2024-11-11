@@ -4,7 +4,6 @@ import static store.constants.parser.ParserConstants.PARSER_DELIMITER;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.Optional;
 import store.domain.Product;
 import store.domain.Promotion;
 

@@ -1,6 +1,7 @@
 package store.parser;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,7 +25,27 @@ public class MarkdownParser {
     }
 
     public static Set<Product> parseProducts(String filePath, Map<String, Promotion> promotionMap) {
-        return new HashSet<>(parse(filePath, (line) -> ProductParser.parse(line, promotionMap)));
+        Set<Product> productSetWithOutSoldOutGeneralProducts = new HashSet<>(
+                parse(filePath, (line) -> ProductParser.parse(line, promotionMap)));
+        return getAllProductsWithOutOfGeneralProducts(productSetWithOutSoldOutGeneralProducts);
+    }
+
+    private static Set<Product> getAllProductsWithOutOfGeneralProducts(Set<Product> productSet) {
+        Set<Product> products = new HashSet<>();
+        for (Product product : productSet) {
+            if (doesNotHasGeneralProducts(productSet, product)) {
+                products.add(new Product(product.getName(), product.getPrice(), BigDecimal.ZERO, null));
+            }
+            products.add(product);
+        }
+
+        return products;
+    }
+
+    private static boolean doesNotHasGeneralProducts(Set<Product> productSet, Product product) {
+        return !(productSet.stream()
+                .filter(find -> find.getName().equals(product.getName()) && find.getPromotion().isEmpty())
+                .count() == 1);
     }
 
     public static <T> List<T> parse(String filePath, LineParser<T> parser) {
