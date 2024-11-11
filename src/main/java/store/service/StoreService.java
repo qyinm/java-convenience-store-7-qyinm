@@ -4,6 +4,7 @@ import static store.exception.store.StoreErrorCode.EXCEED_PRODUCT_QUANTITY;
 import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -105,7 +106,7 @@ public class StoreService {
     public List<Item> getMixedItems(String itemName, BigDecimal quantity, Product promotionProduct) {
         BigDecimal willBuyPromotionProductQuantity = promotionProduct.getQuantity();
         BigDecimal willBuyGeneralProductQuantity = quantity.subtract(willBuyPromotionProductQuantity);
-        
+
         return List.of(new Item(purchasePromotionProduct(itemName, willBuyPromotionProductQuantity),
                         willBuyPromotionProductQuantity),
                 new Item(purchaseGeneralProduct(itemName, willBuyGeneralProductQuantity),
@@ -115,15 +116,16 @@ public class StoreService {
 
     private BigDecimal calculateMembershipDiscountAmount(List<Item> cart, List<Item> promotionBonusItems) {
         return cart.stream().filter(item -> promotionBonusItems.stream()
-                        .anyMatch(bonusItem -> bonusItem.product().getName().equals(item.product().getName())))
+                        .noneMatch(bonusItem -> bonusItem.product().getName().equals(item.product().getName())))
                 .map(item -> item.getTotalQuantity().multiply(BigDecimal.valueOf(0.3)))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(0, RoundingMode.FLOOR);
     }
 
     private List<Item> getPromotionBonusItems(List<Item> cart) {
         return cart.stream().filter(item -> item.product().getPromotion().isPresent()).map(item -> {
             Promotion promotion = item.product().getPromotion().get();
-            BigDecimal bonusQuantity = item.quantity().divide(promotion.getBuyAmount().add(promotion.getGetAmount()));
+            BigDecimal bonusQuantity = item.quantity()
+                    .divide(promotion.getBuyAmount().add(promotion.getGetAmount()), 0, RoundingMode.FLOOR);
             return new Item(item.product(), bonusQuantity);
         }).toList();
     }
