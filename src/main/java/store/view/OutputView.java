@@ -3,9 +3,12 @@ package store.view;
 import static store.constants.view.OutputViewConstants.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
+import store.domain.Item;
 import store.domain.Product;
 import store.domain.Promotion;
+import store.dtos.ReceiptDto;
 
 public class OutputView {
     private static final String PRODUCT_INDEX = "-";
@@ -62,5 +65,27 @@ public class OutputView {
         return product.getPromotion()
                 .map(Promotion::getName)
                 .orElse(PROMOTION_EMPTY);
+    }
+
+    public static void printReceipt(List<Item> cart, ReceiptDto receipt) {
+        // 출력
+        System.out.println("============== W 편의점 ===============");
+        System.out.printf("%-12s%-6s%-12s%n", "상품명", "수량", "금액");  // 헤더 출력
+
+        for (Item item : cart) {
+            System.out.printf("%-12s%-6s%,12d%n", item.product().getName(), item.quantity(), item.product().getPrice().intValue());
+        }
+
+        System.out.println("============= 증정 ================");
+        for (Item bonusItem : receipt.promotionBonusItems()) {
+            System.out.printf("%-12s%-6s%n", bonusItem.product().getName(), bonusItem.quantity());
+        }
+
+        System.out.println("====================================");
+        System.out.printf("%-14s%-6s%,12d%n", "총구매액", cart.stream().map(Item::quantity).reduce(BigDecimal.ZERO, BigDecimal::add), receipt.totalPay().intValue());
+        System.out.printf("%-14s%-6s%,12d%n", "행사할인", "", -receipt.promotionDiscountPay().intValue());
+        System.out.printf("%-14s%-6s%,12d%n", "멤버십할인", "", -receipt.membershipDiscountPay().intValue());
+        System.out.printf("%-14s%-6s%,12d%n", "내실돈", "", receipt.willPayAmounts().intValue());
+
     }
 }
