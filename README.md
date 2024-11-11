@@ -101,20 +101,59 @@
 ### Parser
 - [X] promotions.md, products.md 파싱 후 repository 객체 저장
 
-### 도메인
-#### Promotion
-promotions.md를 파싱한 현재 존재하는 프로모션
+## SequenceDiagram
+```mermaid
+sequenceDiagram
 
-##### 필드
-- String name
-- BigDecimal buy
-- BigDecimal get
-- LocalDate start_date
-- LocalDate end_date
-#### Product
-products.md를 파싱한 현재 존재하는 상품
-##### 필드
-- String name
-- BigDecimal price
-- BigDecimal quantity
-- Promotion promotion
+    autonumber
+    StoreRepository->>MarkdownParser: products.md 및 promotions.md 파싱 요청
+    MarkdownParser->>StoreRepository: 상품 및 프로모션 데이터를 객체로 저장
+
+    break 추가 구매 하지 않을 시 프로그램 종료
+    InputView->> User: 유저 구매할 상품 요청 [상품명-수량]
+    User->>InputView: 유저 구매할 상품 입력
+    alt 유효하지 않은 입력
+    InputView-->>InputView: 예외 발생, 재 입력
+    end
+    InputView->>StoreController: 유저 입력 데이터 인자 전달
+    loop 유저 입력 데이터 Item으로 변경
+    StoreController->>StoreService: 구매 상품명, 구매 수량 전달
+    alt 일반, 프로모션 상품 재고 합 < 구매수량
+    InputView->>StoreController: 재입력
+    end
+    StoreController->>StoreService: 상품명 전달
+    StoreService->>StoreController: 해당 상품명 적용되는 프로모션 상품 있는 지 여부 반환
+    alt 적용되는 프로모션 상품 없을 때
+    StoreController ->> Item: 일반 상품 Item 생성
+    end
+    StoreController ->> StoreService: 상품명, 상품개수 전달
+    StoreService ->> StoreController: 프로모션 상품 개수 구매 가능 여부
+    alt 프로모션 상품으로만 구매 가능
+    StoreController ->> Item: 프로모션 상품 Item 객체 생성
+    else 일반 상품, 프로모션 상품 섞어서 Item 생성
+    StoreController ->> InputView: 정가 가격 구매 여부 유저 입력 요청
+    InputView ->> StoreController: 정가 가격 구매 여부 전달
+    alt 정가 구매 의사 존재
+    StoreController ->> StoreService: 상품명, 필요 개수, 프로모션 상품 전달 일반, 프로모션 상품 Item 요청
+    StoreService ->> StoreController: 일반, 프로모션 상품으로 Item이 총 2개 있는 List 반환
+    else 정가 구매 의사 없을 시
+    StoreController ->> Item: 프로모션 상품 Item만 생성
+    end
+    end
+    end
+    StoreController ->> Cart: 위에서 생성한 Item으로 유저 장바구니 카트 생성
+    Cart ->> StoreController: 유저 구매 예정 장바구니 카트 반환
+    StoreController ->> ReceiptDto: 영수증 출력을 위한 객체 생성 요청
+    ReceiptDto ->> StoreController: 영수증 출력용 Dto 반환
+    StoreController ->> InputView: 멤버십 할인 여부 입력 요청
+    InputView ->> StoreController: 멤버십 할인 여부 반환
+    alt 멤버십 할인 여부 존재
+    StoreController ->> StoreService: 멤버십 할인 요청
+    StoreService ->> StoreController: 멤버십 할인 금액반환 최대 8000원
+    end
+    StoreController ->> OutputView: Cart와 ReceiptDto 전달
+    OutputView ->> User: 영수증 출력
+    StoreController ->> InputView: 추가 구매 여부 입력 요청
+    InputView ->> StoreController: 추가 구매 여부 반환
+    end
+```
