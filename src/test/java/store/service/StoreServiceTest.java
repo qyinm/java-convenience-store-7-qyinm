@@ -2,6 +2,7 @@ package store.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static store.exception.store.StoreErrorCode.EXCEED_PRODUCT_QUANTITY;
 import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ import store.exception.StoreException;
 import store.repository.StoreRepository;
 
 class StoreServiceTest {
+    private static final String ERROR_PREFIX = "[ERROR] ";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private StoreRepository storeRepository;
@@ -199,7 +201,7 @@ class StoreServiceTest {
         // When & Then
         assertThatThrownBy(() -> storeService.getGeneralProduct("오렌지"))
                 .isInstanceOf(StoreException.class)
-                .hasMessageContaining(NOT_FOUND_PRODUCT.getMessage());
+                .hasMessage(ERROR_PREFIX + NOT_FOUND_PRODUCT.getMessage());
     }
 
     @Test
@@ -267,5 +269,25 @@ class StoreServiceTest {
         assertThat(receipt.membershipDiscountPay()).isEqualTo(BigDecimal.valueOf(8000));
         assertThat(receipt.promotionDiscountPay()).isEqualTo(BigDecimal.valueOf(100));
         assertThat(receipt.promotionBonusItems().size()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("일반 상품을 구매 시 재고 수량보다 많으면 예외 발생")
+    void 일반_상품_구매_시_재고_수량보다_많으면_예외() {
+        // When & Then
+        // 10 - 1000 예외 발생
+        assertThatThrownBy(() -> storeService.purchaseGeneralProduct("콜라", BigDecimal.valueOf(1000)))
+                .isInstanceOf(StoreException.class)
+                .hasMessage(ERROR_PREFIX + EXCEED_PRODUCT_QUANTITY.getMessage());
+    }
+
+    @Test
+    @DisplayName("프로모션 상품을 구매 시 재고 수량보다 많으면 예외 발생")
+    void 프로모션_상품_구매_시_재고_수량보다_많으면_예외() {
+        // When & Then
+        // 10 - 1000 예외 발생
+        assertThatThrownBy(() -> storeService.purchasePromotionProduct("콜라", BigDecimal.valueOf(1000)))
+                .isInstanceOf(StoreException.class)
+                .hasMessage(ERROR_PREFIX + EXCEED_PRODUCT_QUANTITY.getMessage());
     }
 }
