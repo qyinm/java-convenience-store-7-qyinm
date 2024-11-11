@@ -4,9 +4,11 @@ import static store.exception.store.StoreErrorCode.EXCEED_PRODUCT_QUANTITY;
 import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import store.domain.Item;
 import store.domain.Product;
 import store.domain.Promotion;
 import store.exception.StoreException;
@@ -97,5 +99,15 @@ public class StoreService {
 
     public Set<Product> getAllProducts() {
         return storeRepository.getAllProducts();
+    }
+
+    public List<Item> getMixedItems(String itemName, BigDecimal quantity, Product promotionProduct) {
+        return List.of(
+                new Item(purchasePromotionProduct(itemName, promotionProduct.getQuantity()),
+                        promotionProduct.getQuantity()),
+                new Item(purchaseGeneralProduct(itemName,
+                        quantity.subtract(promotionProduct.getQuantity())),
+                        quantity.subtract(promotionProduct.getQuantity()))
+        );
     }
 }

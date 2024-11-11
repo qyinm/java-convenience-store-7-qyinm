@@ -72,13 +72,7 @@ public class StoreController {
         BigDecimal fullPriceCount = calculateFullPriceItemCount(quantity, promotionProduct);
 
         if (InputView.askFullPricePurchase(itemName, fullPriceCount)) {
-            return List.of(
-                    new Item(storeService.purchasePromotionProduct(itemName, promotionProduct.getQuantity()),
-                            promotionProduct.getQuantity()),
-                    new Item(storeService.purchaseGeneralProduct(itemName,
-                            quantity.subtract(promotionProduct.getQuantity())),
-                            quantity.subtract(promotionProduct.getQuantity()))
-            );
+            return storeService.getMixedItems(itemName, quantity, promotionProduct);
         }
 
         return List.of(new Item(storeService.purchasePromotionProduct(itemName, quantity.subtract(fullPriceCount)),
