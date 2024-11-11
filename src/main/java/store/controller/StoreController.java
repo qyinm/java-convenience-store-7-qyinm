@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 import store.domain.Item;
 import store.domain.Product;
-import store.domain.Promotion;
 import store.dtos.ItemInputDto;
 import store.dtos.ReceiptDto;
 import store.service.StoreService;
@@ -22,36 +21,24 @@ public class StoreController {
     }
 
     public void runStore() {
-        Set<Product> allProducts = storeService.getAllProducts();
-        OutputView.printCurrentStoreInventory(allProducts);
+        noticeCurrentInventory();
+        List<Item> cart = getUserWantToBuyItems();
+        boolean applyMembershipDiscount = InputView.askGetMembershipDiscount();
 
-        List<ItemInputDto> userItemInput = InputView.getUserItemInput();
-        List<Item> cart = createCart(userItemInput);
-        ReceiptDto receiptDto = calculateUserPurchase(cart);
+        ReceiptDto receiptDto = storeService.calculateUserPurchase(cart, applyMembershipDiscount);
         OutputView.printReceipt(cart, receiptDto);
     }
 
-    private ReceiptDto calculateUserPurchase(List<Item> cart) {
-        BigDecimal totalPay = cart.stream().map(Item::getTotalQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
-        List<Item> promotionBonusItems = cart.stream()
-                .filter(item -> item.product().getPromotion().isPresent()) // promotion이 있는 아이템만 필터링
-                .map(item -> {
-                    Promotion promotion = item.product().getPromotion().get();
-                    BigDecimal bonusQuantity = item.quantity()
-                            .divide(promotion.getBuyAmount().add(promotion.getGetAmount()));
-                    return new Item(item.product(), bonusQuantity);
-                })
-                .toList(); // 변환된 아이템들을 리스트로 수집
-        BigDecimal promotionDiscountPay = promotionBonusItems.stream().map(Item::getTotalQuantity)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal membershipDiscountPay = cart.stream()
-                .filter(item -> promotionBonusItems.stream()
-                        .anyMatch(bonusItem -> bonusItem.product().getName().equals(item.product().getName())))
-                .map(item -> item.getTotalQuantity().multiply(BigDecimal.valueOf(0.3)))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal willPayAmounts = totalPay.subtract(promotionDiscountPay).subtract(membershipDiscountPay);
-        return new ReceiptDto(promotionBonusItems, totalPay, promotionDiscountPay, membershipDiscountPay, willPayAmounts);
+    private List<Item> getUserWantToBuyItems() {
+        List<ItemInputDto> userItemInput = InputView.getUserItemInput();
+        return createCart(userItemInput);
     }
+
+    private void noticeCurrentInventory() {
+        Set<Product> allProducts = storeService.getAllProducts();
+        OutputView.printCurrentStoreInventory(allProducts);
+    }
+
 
     public List<Item> createCart(List<ItemInputDto> userItemInput) {
         List<Item> items = new ArrayList<>();

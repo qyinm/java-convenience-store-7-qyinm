@@ -11,6 +11,7 @@ import java.util.function.Function;
 import store.domain.Item;
 import store.domain.Product;
 import store.domain.Promotion;
+import store.dtos.ReceiptDto;
 import store.exception.StoreException;
 import store.repository.StoreRepository;
 
@@ -102,12 +103,49 @@ public class StoreService {
     }
 
     public List<Item> getMixedItems(String itemName, BigDecimal quantity, Product promotionProduct) {
-        return List.of(
-                new Item(purchasePromotionProduct(itemName, promotionProduct.getQuantity()),
+        return List.of(new Item(purchasePromotionProduct(itemName, promotionProduct.getQuantity()),
                         promotionProduct.getQuantity()),
-                new Item(purchaseGeneralProduct(itemName,
-                        quantity.subtract(promotionProduct.getQuantity())),
-                        quantity.subtract(promotionProduct.getQuantity()))
-        );
+                new Item(purchaseGeneralProduct(itemName, quantity.subtract(promotionProduct.getQuantity())),
+                        quantity.subtract(promotionProduct.getQuantity())));
+    }
+
+    private BigDecimal calculateMembershipDiscountAmount(List<Item> cart, List<Item> promotionBonusItems) {
+        return cart.stream().filter(item -> promotionBonusItems.stream()
+                        .anyMatch(bonusItem -> bonusItem.product().getName().equals(item.product().getName())))
+                .map(item -> item.getTotalQuantity().multiply(BigDecimal.valueOf(0.3)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private List<Item> getPromotionBonusItems(List<Item> cart) {
+        return cart.stream().filter(item -> item.product().getPromotion().isPresent()).map(item -> {
+            Promotion promotion = item.product().getPromotion().get();
+            BigDecimal bonusQuantity = item.quantity().divide(promotion.getBuyAmount().add(promotion.getGetAmount()));
+            return new Item(item.product(), bonusQuantity);
+        }).toList();
+    }
+
+    public ReceiptDto calculateUserPurchase(List<Item> cart, boolean applyMembershipDiscount) {
+        BigDecimal totalPay = calculateAllItemsTotalPrice(cart);
+        List<Item> promotionBonusItems = getPromotionBonusItems(cart);
+        BigDecimal promotionDiscountPay = calculateAllItemsTotalPrice(promotionBonusItems);
+        BigDecimal membershipDiscountPay = calculateMembershipDiscountPrice(cart, applyMembershipDiscount,
+                promotionBonusItems);
+        BigDecimal willPayAmounts = totalPay.subtract(promotionDiscountPay).subtract(membershipDiscountPay);
+
+        return new ReceiptDto(promotionBonusItems, totalPay, promotionDiscountPay, membershipDiscountPay,
+                willPayAmounts);
+    }
+
+    private BigDecimal calculateMembershipDiscountPrice(List<Item> cart, boolean applyMembershipDiscount,
+                                                        List<Item> promotionBonusItems) {
+        if (!applyMembershipDiscount) {
+            return BigDecimal.ZERO;
+        }
+        return calculateMembershipDiscountAmount(cart, promotionBonusItems);
+    }
+
+    private BigDecimal calculateAllItemsTotalPrice(List<Item> promotionBonusItems) {
+        return promotionBonusItems.stream().map(Item::getTotalQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
