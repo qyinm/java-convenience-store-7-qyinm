@@ -28,13 +28,13 @@ public class Cart {
         };
     }
 
-    public BigDecimal getTotalPrice() {
-        return items.stream().map(Item::getTotalQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+    public BigDecimal getTotalItemsAmount() {
+        return items.stream().map(Item::getTotalItemAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public BigDecimal calculateMembershipDiscountAmount(Cart promotionBonusItems) {
         return items.stream().filter(getItemUnIncludedBonusItemsPredicate(promotionBonusItems))
-                .map(item -> item.getTotalQuantity().multiply(BigDecimal.valueOf(0.3)))
+                .map(item -> item.getTotalItemAmount().multiply(BigDecimal.valueOf(0.3)))
                 .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(0, RoundingMode.FLOOR).min(BigDecimal.valueOf(8000));
     }
 
@@ -52,5 +52,9 @@ public class Cart {
 
     public int getSize() {
         return items.size();
+    }
+
+    public BigDecimal getTotalItemsQuantity() {
+        return items.stream().map(Item::quantity).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
