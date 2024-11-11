@@ -2,6 +2,7 @@ package store.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static store.exception.store.StoreErrorCode.EXCEED_PRODUCT_QUANTITY;
 import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 
@@ -35,12 +36,13 @@ class StoreServiceTest {
         Promotion unactivePromotion = new Promotion("탄산1+1", BigDecimal.valueOf(2), BigDecimal.valueOf(1),
                 LocalDate.parse("2023-01-01", DATE_FORMATTER), LocalDate.parse("2023-12-31", DATE_FORMATTER));
 
-        Set<Product> products = Set.of(new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), promotion),
+        Set<Product> products = Set.of(
                 new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), promotion),
                 new Product("사이다", BigDecimal.valueOf(1000), BigDecimal.valueOf(5), promotion),
                 new Product("환타", BigDecimal.valueOf(1000), BigDecimal.valueOf(5), unactivePromotion),
                 new Product("콜라", BigDecimal.valueOf(1000), BigDecimal.valueOf(10), null),
-                new Product("사이다", BigDecimal.valueOf(1000), BigDecimal.valueOf(5), null));
+                new Product("사이다", BigDecimal.valueOf(1000), BigDecimal.valueOf(5), null)
+        );
 
         // StoreRepository 직접 구현
         storeRepository = new StoreRepository(products);
@@ -72,26 +74,6 @@ class StoreServiceTest {
     void 존재하지_않는_프로모션_상품은_false() {
         // When
         boolean result = storeService.hasActivePromotion("오렌지");
-
-        // Then
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    @DisplayName("일반 상품이 충분한 수량일 때, true 반환")
-    void 일반_상품_충분한_수량일때_true() {
-        // When
-        boolean result = storeService.isSufficientQuantityGeneralProduct("콜라", BigDecimal.valueOf(5));
-
-        // Then
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    @DisplayName("일반 상품이 부족한 수량일 때, false 반환")
-    void 일반_상품_부족한_수량일때_false() {
-        // When
-        boolean result = storeService.isSufficientQuantityGeneralProduct("사이다", BigDecimal.valueOf(10));
 
         // Then
         assertThat(result).isFalse();
@@ -289,5 +271,27 @@ class StoreServiceTest {
         assertThatThrownBy(() -> storeService.purchasePromotionProduct("콜라", BigDecimal.valueOf(1000)))
                 .isInstanceOf(StoreException.class)
                 .hasMessage(ERROR_PREFIX + EXCEED_PRODUCT_QUANTITY.getMessage());
+    }
+
+    @Test
+    @DisplayName("상품의 총 수량이 충분한 경우 예외가 발생하지 않는다")
+    void 상품의_총_수량이_충분한_경우() {
+        assertDoesNotThrow(() -> storeService.validatePurchasableProduct("콜라", BigDecimal.valueOf(10)));
+    }
+
+    @Test
+    @DisplayName("상품의 총 수량이 부족한 경우 예외가 발생한다")
+    void 상품의_총_수량이_부족한_경우() {
+        assertThatThrownBy(() -> storeService.validatePurchasableProduct("콜라", BigDecimal.valueOf(21)))
+                .isInstanceOf(StoreException.class)
+                .hasMessage(ERROR_PREFIX + EXCEED_PRODUCT_QUANTITY.getMessage());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품을 요청하면 예외가 발생한다")
+    void 존재하지_않는_상품을_요청하면_예외가_발생한다() {
+        assertThatThrownBy(() -> storeService.validatePurchasableProduct("오렌지", BigDecimal.valueOf(1)))
+                .isInstanceOf(StoreException.class)
+                .hasMessage(ERROR_PREFIX + NOT_FOUND_PRODUCT.getMessage());
     }
 }

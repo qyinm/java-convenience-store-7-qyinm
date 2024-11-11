@@ -29,12 +29,6 @@ public class StoreService {
         return promotionProduct.map(product -> product.getPromotion().get().isActive()).orElse(false);
     }
 
-    public boolean isSufficientQuantityGeneralProduct(String productName, BigDecimal quantity) {
-        Optional<Product> generalProduct = storeRepository.findGeneralProductByName(productName);
-
-        return generalProduct.map(isGreaterQuantityThan(quantity)).orElse(false);
-    }
-
     private Function<Product, Boolean> isGreaterQuantityThan(BigDecimal quantity) {
         return product -> product.getQuantity().compareTo(quantity) >= 0;
     }
