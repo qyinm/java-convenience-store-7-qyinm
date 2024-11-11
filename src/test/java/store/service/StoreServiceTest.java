@@ -233,8 +233,39 @@ class StoreServiceTest {
 
         // Then
         assertThat(receipt.totalPay()).isNotNull();
-        // 콜라: 2+1로 4000, 바나나: 2000 - 600(멤버십 할인)
+        // 콜라: 2+1로 4000, 사이다: 2000 - 600(멤버십 할인)
         assertThat(receipt.willPayAmounts()).isEqualTo(BigDecimal.valueOf(5400));
         assertThat(receipt.membershipDiscountPay()).isEqualTo(BigDecimal.valueOf(600));
+        assertThat(receipt.promotionBonusItems().size()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("사용자 구매 계산")
+    void 사용자_구매_계산_멤버십_할인_최대_8000() {
+        // Given
+        Promotion promotion = new Promotion("탄산2+1", BigDecimal.valueOf(2), BigDecimal.valueOf(1),
+                LocalDate.parse("2024-01-01", DATE_FORMATTER), LocalDate.parse("2024-12-31", DATE_FORMATTER));
+        Set<Product> productSet = Set.of(
+                new Product("환타", BigDecimal.valueOf(100), BigDecimal.valueOf(10), promotion),
+                new Product("콜라", BigDecimal.valueOf(10000), BigDecimal.valueOf(1000), null),
+                new Product("바나나", BigDecimal.valueOf(10000), BigDecimal.valueOf(1000), null));
+        storeRepository = new StoreRepository(productSet);
+        storeService = new StoreService(storeRepository);
+        List<Item> cart = List.of(
+                new Item(storeService.getGeneralProduct("콜라"), BigDecimal.valueOf(100)),
+                new Item(storeService.getGeneralProduct("바나나"), BigDecimal.valueOf(100)),
+                new Item(storeService.getPromotionProduct("환타"), BigDecimal.valueOf(3))
+        );
+
+        // When
+        ReceiptDto receipt = storeService.calculateUserPurchase(cart, true);
+
+        // Then
+        assertThat(receipt.totalPay()).isNotNull();
+        //
+        assertThat(receipt.willPayAmounts()).isEqualTo(BigDecimal.valueOf(1_992_200));
+        assertThat(receipt.membershipDiscountPay()).isEqualTo(BigDecimal.valueOf(8000));
+        assertThat(receipt.promotionDiscountPay()).isEqualTo(BigDecimal.valueOf(100));
+        assertThat(receipt.promotionBonusItems().size()).isEqualTo(1);
     }
 }
