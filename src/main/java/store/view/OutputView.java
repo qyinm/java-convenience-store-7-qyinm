@@ -83,7 +83,7 @@ public class OutputView {
         printItemsInformation(cart);
         printBonusItems(receipt);
         System.out.println(RECEIPT_FOOTER.getFormat());
-        printTotalAmountStatistics(receipt);
+        printTotalAmountStatistics(cart, receipt);
     }
 
     private static void printItemsInformation(Cart cart) {
@@ -92,8 +92,8 @@ public class OutputView {
         System.out.print(formattedAllItemsWithNameAndQuantity);
     }
 
-    private static void printTotalAmountStatistics(ReceiptDto receipt) {
-        printTotalAmount(receipt);
+    private static void printTotalAmountStatistics(Cart cart, ReceiptDto receipt) {
+        printTotalAmount(cart.getTotalItemsQuantity(), receipt);
         printPromotionDiscountAmount(receipt);
         printMembershipDiscountAmount(receipt);
         printWillPayAmount(receipt);
@@ -114,8 +114,9 @@ public class OutputView {
                 -receipt.promotionDiscountPay().intValue());
     }
 
-    private static void printTotalAmount(ReceiptDto receipt) {
-        System.out.printf(RECEIPT_TOTAL_FORMAT.getFormat(), RECEIPT_TOTAL, "", receipt.totalPay().intValue());
+    private static void printTotalAmount(BigDecimal totalQuantity, ReceiptDto receipt) {
+        System.out.printf(RECEIPT_TOTAL_FORMAT.getFormat(), RECEIPT_TOTAL.getLabel(), totalQuantity,
+                receipt.totalPay().intValue());
     }
 
     private static void printBonusItems(ReceiptDto receipt) {
