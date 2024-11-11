@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Set;
 import store.domain.Item;
 import store.domain.Product;
+import store.domain.Promotion;
 import store.dtos.ItemInputDto;
+import store.dtos.ReceiptDto;
 import store.service.StoreService;
 import store.view.InputView;
 import store.view.OutputView;
@@ -22,9 +24,33 @@ public class StoreController {
     public void runStore() {
         Set<Product> allProducts = storeService.getAllProducts();
         OutputView.printCurrentStoreInventory(allProducts);
-        
+
         List<ItemInputDto> userItemInput = InputView.getUserItemInput();
         List<Item> cart = createCart(userItemInput);
+        ReceiptDto receiptDto = calculateUserPurchase(cart);
+        OutputView.printReceipt(cart, receiptDto);
+    }
+
+    private ReceiptDto calculateUserPurchase(List<Item> cart) {
+        BigDecimal totalPay = cart.stream().map(Item::getTotalQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+        List<Item> promotionBonusItems = cart.stream()
+                .filter(item -> item.product().getPromotion().isPresent()) // promotion이 있는 아이템만 필터링
+                .map(item -> {
+                    Promotion promotion = item.product().getPromotion().get();
+                    BigDecimal bonusQuantity = item.quantity()
+                            .divide(promotion.getBuyAmount().add(promotion.getGetAmount()));
+                    return new Item(item.product(), bonusQuantity);
+                })
+                .toList(); // 변환된 아이템들을 리스트로 수집
+        BigDecimal promotionDiscountPay = promotionBonusItems.stream().map(Item::getTotalQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal membershipDiscountPay = cart.stream()
+                .filter(item -> promotionBonusItems.stream()
+                        .anyMatch(bonusItem -> bonusItem.product().getName().equals(item.product().getName())))
+                .map(item -> item.getTotalQuantity().multiply(BigDecimal.valueOf(0.3)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal willPayAmounts = totalPay.subtract(promotionDiscountPay).subtract(membershipDiscountPay);
+        return new ReceiptDto(promotionBonusItems, totalPay, promotionDiscountPay, membershipDiscountPay, willPayAmounts);
     }
 
     public List<Item> createCart(List<ItemInputDto> userItemInput) {
