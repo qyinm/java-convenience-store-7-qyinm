@@ -1,7 +1,10 @@
 package store.domain;
 
+import static store.exception.store.StoreErrorCode.EXCEED_PRODUCT_QUANTITY;
+
 import java.math.BigDecimal;
 import java.util.Optional;
+import store.exception.StoreException;
 
 public class Product {
     private final String name;
@@ -33,6 +36,14 @@ public class Product {
     }
 
     public void updateQuantity(BigDecimal newQuantity) {
+        validateQuantity(newQuantity);
+
         this.quantity = newQuantity;
+    }
+
+    private void validateQuantity(BigDecimal newQuantity) {
+        if (newQuantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new StoreException(EXCEED_PRODUCT_QUANTITY);
+        }
     }
 }
