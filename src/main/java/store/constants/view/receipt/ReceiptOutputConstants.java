@@ -1,4 +1,4 @@
-package store.constants.view;
+package store.constants.view.receipt;
 
 public enum ReceiptOutputConstants {
     RECEIPT_PROMOTION_DISCOUNT("행사할인"),
