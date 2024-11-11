@@ -3,11 +3,13 @@ package store.controller;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import store.domain.Item;
 import store.domain.Product;
 import store.dtos.ItemInputDto;
 import store.service.StoreService;
 import store.view.InputView;
+import store.view.OutputView;
 
 public class StoreController {
 
@@ -18,6 +20,9 @@ public class StoreController {
     }
 
     public void runStore() {
+        Set<Product> allProducts = storeService.getAllProducts();
+        OutputView.printCurrentStoreInventory(allProducts);
+        
         List<ItemInputDto> userItemInput = InputView.getUserItemInput();
         List<Item> cart = createCart(userItemInput);
     }
