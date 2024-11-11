@@ -14,6 +14,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.domain.Cart;
 import store.domain.Item;
 import store.domain.Product;
 import store.domain.Promotion;
@@ -209,8 +210,8 @@ class StoreServiceTest {
     @DisplayName("사용자 구매 계산")
     void 사용자_구매_계산() {
         // Given
-        List<Item> cart = List.of(new Item(storeService.getPromotionProduct("콜라"), BigDecimal.valueOf(5)),
-                new Item(storeService.getGeneralProduct("사이다"), BigDecimal.valueOf(2)));
+        Cart cart = new Cart(List.of(new Item(storeService.getPromotionProduct("콜라"), BigDecimal.valueOf(5)),
+                new Item(storeService.getGeneralProduct("사이다"), BigDecimal.valueOf(2))));
 
         // When
         ReceiptDto receipt = storeService.calculateUserPurchase(cart, true);
@@ -220,7 +221,7 @@ class StoreServiceTest {
         // 콜라: 2+1로 4000, 사이다: 2000 - 600(멤버십 할인)
         assertThat(receipt.willPayAmounts()).isEqualTo(BigDecimal.valueOf(5400));
         assertThat(receipt.membershipDiscountPay()).isEqualTo(BigDecimal.valueOf(600));
-        assertThat(receipt.promotionBonusItems().size()).isEqualTo(1);
+        assertThat(receipt.promotionBonusItems().getSize()).isEqualTo(1);
     }
 
     @Test
@@ -235,22 +236,21 @@ class StoreServiceTest {
                 new Product("바나나", BigDecimal.valueOf(10000), BigDecimal.valueOf(1000), null));
         storeRepository = new StoreRepository(productSet);
         storeService = new StoreService(storeRepository);
-        List<Item> cart = List.of(
+        Cart cart = new Cart(List.of(
                 new Item(storeService.getGeneralProduct("콜라"), BigDecimal.valueOf(100)),
                 new Item(storeService.getGeneralProduct("바나나"), BigDecimal.valueOf(100)),
                 new Item(storeService.getPromotionProduct("환타"), BigDecimal.valueOf(3))
-        );
+        ));
 
         // When
         ReceiptDto receipt = storeService.calculateUserPurchase(cart, true);
 
         // Then
         assertThat(receipt.totalPay()).isNotNull();
-        //
-        assertThat(receipt.willPayAmounts()).isEqualTo(BigDecimal.valueOf(1_992_200));
+        assertThat(receipt.willPayAmounts()).isEqualTo(BigDecimal.valueOf(1992200));
         assertThat(receipt.membershipDiscountPay()).isEqualTo(BigDecimal.valueOf(8000));
         assertThat(receipt.promotionDiscountPay()).isEqualTo(BigDecimal.valueOf(100));
-        assertThat(receipt.promotionBonusItems().size()).isEqualTo(1);
+        assertThat(receipt.promotionBonusItems().getSize()).isEqualTo(1);
     }
 
     @Test

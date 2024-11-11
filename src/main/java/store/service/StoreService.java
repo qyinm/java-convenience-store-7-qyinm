@@ -4,11 +4,11 @@ import static store.exception.store.StoreErrorCode.EXCEED_PRODUCT_QUANTITY;
 import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import store.domain.Cart;
 import store.domain.Item;
 import store.domain.Product;
 import store.domain.Promotion;
@@ -85,8 +85,7 @@ public class StoreService {
         validateHasProductWithName(productName);
 
         BigDecimal totalQuantity = storeRepository.getAllProducts().stream()
-                .filter(product -> product.getName().equals(productName))
-                .map(Product::getQuantity)
+                .filter(product -> product.getName().equals(productName)).map(Product::getQuantity)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (quantity.compareTo(totalQuantity) > 0) {
@@ -102,52 +101,30 @@ public class StoreService {
         BigDecimal willBuyPromotionProductQuantity = promotionProduct.getQuantity();
         BigDecimal willBuyGeneralProductQuantity = quantity.subtract(willBuyPromotionProductQuantity);
 
-        return List.of(new Item(purchasePromotionProduct(itemName, willBuyPromotionProductQuantity),
+        return List.of(
+                new Item(purchasePromotionProduct(itemName, willBuyPromotionProductQuantity),
                         willBuyPromotionProductQuantity),
                 new Item(purchaseGeneralProduct(itemName, willBuyGeneralProductQuantity),
                         willBuyGeneralProductQuantity)
         );
     }
 
-    private BigDecimal calculateMembershipDiscountAmount(List<Item> cart, List<Item> promotionBonusItems) {
-        return cart.stream().filter(item -> promotionBonusItems.stream()
-                        .noneMatch(bonusItem -> bonusItem.product().getName().equals(item.product().getName())))
-                .map(item -> item.getTotalQuantity().multiply(BigDecimal.valueOf(0.3)))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .setScale(0, RoundingMode.FLOOR)
-                .min(BigDecimal.valueOf(8000));
-    }
-
-    private List<Item> getPromotionBonusItems(List<Item> cart) {
-        return cart.stream().filter(item -> item.product().getPromotion().isPresent()).map(item -> {
-            Promotion promotion = item.product().getPromotion().get();
-            BigDecimal bonusQuantity = item.quantity()
-                    .divide(promotion.getBuyAmount().add(promotion.getGetAmount()), 0, RoundingMode.FLOOR);
-            return new Item(item.product(), bonusQuantity);
-        }).toList();
-    }
-
-    public ReceiptDto calculateUserPurchase(List<Item> cart, boolean applyMembershipDiscount) {
-        BigDecimal totalPay = calculateAllItemsTotalPrice(cart);
-        List<Item> promotionBonusItems = getPromotionBonusItems(cart);
-        BigDecimal promotionDiscountPay = calculateAllItemsTotalPrice(promotionBonusItems);
-        BigDecimal membershipDiscountPay = calculateMembershipDiscountPrice(cart, applyMembershipDiscount,
-                promotionBonusItems);
+    public ReceiptDto calculateUserPurchase(Cart cart, boolean applyMembershipDiscount) {
+        BigDecimal totalPay = cart.getTotalPrice();
+        Cart promotionBonusItems = cart.getPromotionBonusItems();
+        BigDecimal promotionDiscountPay = promotionBonusItems.getTotalPrice();
+        BigDecimal membershipDiscountPay = getMembershipDiscountPay(cart, promotionBonusItems, applyMembershipDiscount);
         BigDecimal willPayAmounts = totalPay.subtract(promotionDiscountPay).subtract(membershipDiscountPay);
 
         return new ReceiptDto(promotionBonusItems, totalPay, promotionDiscountPay, membershipDiscountPay,
                 willPayAmounts);
     }
 
-    private BigDecimal calculateMembershipDiscountPrice(List<Item> cart, boolean applyMembershipDiscount,
-                                                        List<Item> promotionBonusItems) {
+    private BigDecimal getMembershipDiscountPay(Cart cart, Cart promotionBonusItems, boolean applyMembershipDiscount) {
         if (!applyMembershipDiscount) {
             return BigDecimal.ZERO;
         }
-        return calculateMembershipDiscountAmount(cart, promotionBonusItems);
-    }
 
-    private BigDecimal calculateAllItemsTotalPrice(List<Item> promotionBonusItems) {
-        return promotionBonusItems.stream().map(Item::getTotalQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return cart.calculateMembershipDiscountAmount(promotionBonusItems);
     }
 }

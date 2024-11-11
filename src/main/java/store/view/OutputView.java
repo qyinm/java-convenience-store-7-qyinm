@@ -6,28 +6,25 @@ import static store.constants.view.OutputViewConstants.ASK_GET_MORE_BONUS_PRODUC
 import static store.constants.view.OutputViewConstants.ASK_MORE_SHOPPING_PREFIX;
 import static store.constants.view.OutputViewConstants.STORE_INVENTORY_PREFIX;
 import static store.constants.view.OutputViewConstants.USER_ITEM_INPUT_PREFIX;
-import static store.constants.view.ReceiptOutputConstants.RECEIPT_FINAL_TOTAL;
-import static store.constants.view.ReceiptOutputConstants.RECEIPT_MEMBERSHIP_DISCOUNT;
-import static store.constants.view.ReceiptOutputConstants.RECEIPT_PROMOTION_DISCOUNT;
-import static store.constants.view.ReceiptOutputConstants.RECEIPT_TOTAL;
 import static store.constants.view.product.ProductOutputConstants.PRODUCT_EMPTY_QUANTITY;
 import static store.constants.view.product.ProductOutputConstants.PRODUCT_INDEX;
 import static store.constants.view.product.ProductOutputConstants.PROMOTION_EMPTY;
 import static store.constants.view.product.ProductOutputFormatConstants.PRODUCT_PRICE_FORMAT;
 import static store.constants.view.product.ProductOutputFormatConstants.PRODUCT_QUANTITY_FORMAT;
+import static store.constants.view.receipt.ReceiptOutputConstants.RECEIPT_FINAL_TOTAL;
+import static store.constants.view.receipt.ReceiptOutputConstants.RECEIPT_MEMBERSHIP_DISCOUNT;
+import static store.constants.view.receipt.ReceiptOutputConstants.RECEIPT_PROMOTION_DISCOUNT;
+import static store.constants.view.receipt.ReceiptOutputConstants.RECEIPT_TOTAL;
 import static store.constants.view.receipt.ReceiptOutputFormatConstants.RECEIPT_FOOTER;
 import static store.constants.view.receipt.ReceiptOutputFormatConstants.RECEIPT_HEADER;
 import static store.constants.view.receipt.ReceiptOutputFormatConstants.RECEIPT_ITEM_FORMAT;
 import static store.constants.view.receipt.ReceiptOutputFormatConstants.RECEIPT_PROMOTION_HEADER;
-import static store.constants.view.receipt.ReceiptOutputFormatConstants.RECEIPT_PROMOTION_ITEM_FORMAT;
 import static store.constants.view.receipt.ReceiptOutputFormatConstants.RECEIPT_TABLE_HEADER;
 import static store.constants.view.receipt.ReceiptOutputFormatConstants.RECEIPT_TOTAL_FORMAT;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Set;
-import store.constants.view.ReceiptOutputConstants;
-import store.domain.Item;
+import store.domain.Cart;
 import store.domain.Product;
 import store.domain.Promotion;
 import store.dtos.ReceiptDto;
@@ -80,7 +77,7 @@ public class OutputView {
         return product.getPromotion().map(Promotion::getName).orElse(PROMOTION_EMPTY.getLabel());
     }
 
-    public static void printReceipt(List<Item> cart, ReceiptDto receipt) {
+    public static void printReceipt(Cart cart, ReceiptDto receipt) {
         System.out.println(RECEIPT_HEADER.getFormat());
         System.out.printf(RECEIPT_TABLE_HEADER.getFormat(), "상품명", "수량", "금액");
         printItemsInformation(cart);
@@ -89,25 +86,22 @@ public class OutputView {
         printTotalAmountStatistics(receipt);
     }
 
-    private static void printItemsInformation(List<Item> cart) {
-        for (Item item : cart) {
-            System.out.printf(RECEIPT_ITEM_FORMAT.getFormat(),
-                    item.product().getName(),
-                    item.quantity(),
-                    item.product().getPrice().intValue()
-            );
-        }
+    private static void printItemsInformation(Cart cart) {
+        String formattedAllItemsWithNameAndQuantity = cart.getFormattedAllItemsWithNameAndPriceAndQuantity(
+                RECEIPT_ITEM_FORMAT.getFormat());
+        System.out.print(formattedAllItemsWithNameAndQuantity);
     }
 
     private static void printTotalAmountStatistics(ReceiptDto receipt) {
         printTotalAmount(receipt);
         printPromotionDiscountAmount(receipt);
         printMembershipDiscountAmount(receipt);
-        printWillPayAmount(RECEIPT_FINAL_TOTAL, receipt.willPayAmounts().intValue());
+        printWillPayAmount(receipt);
     }
 
-    private static void printWillPayAmount(ReceiptOutputConstants receiptFinalTotal, int receipt) {
-        System.out.printf(RECEIPT_TOTAL_FORMAT.getFormat(), receiptFinalTotal.getLabel(), "", receipt);
+    private static void printWillPayAmount(ReceiptDto receipt) {
+        System.out.printf(RECEIPT_TOTAL_FORMAT.getFormat(), RECEIPT_FINAL_TOTAL.getLabel(), "",
+                receipt.willPayAmounts().intValue());
     }
 
     private static void printMembershipDiscountAmount(ReceiptDto receipt) {
@@ -126,9 +120,6 @@ public class OutputView {
 
     private static void printBonusItems(ReceiptDto receipt) {
         System.out.println(RECEIPT_PROMOTION_HEADER.getFormat());
-        for (Item bonusItem : receipt.promotionBonusItems()) {
-            System.out.printf(RECEIPT_PROMOTION_ITEM_FORMAT.getFormat(), bonusItem.product().getName(),
-                    bonusItem.quantity());
-        }
+        printItemsInformation(receipt.promotionBonusItems());
     }
 }

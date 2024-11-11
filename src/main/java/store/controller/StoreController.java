@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import store.domain.Cart;
 import store.domain.Item;
 import store.domain.Product;
 import store.dtos.ItemInputDto;
@@ -23,7 +24,7 @@ public class StoreController {
     public void runStore() {
         do {
             noticeCurrentInventory();
-            List<Item> cart = getUserWantToBuyItems();
+            Cart cart = getUserWantToBuyItems();
             boolean applyMembershipDiscount = InputView.askGetMembershipDiscount();
 
             ReceiptDto receiptDto = storeService.calculateUserPurchase(cart, applyMembershipDiscount);
@@ -31,9 +32,9 @@ public class StoreController {
         } while (InputView.askMoreGetShopping());
     }
 
-    private List<Item> getUserWantToBuyItems() {
+    private Cart getUserWantToBuyItems() {
         List<ItemInputDto> userItemInput = InputView.getUserItemInput();
-        return createCart(userItemInput);
+        return new Cart(createCart(userItemInput));
     }
 
     private void noticeCurrentInventory() {
