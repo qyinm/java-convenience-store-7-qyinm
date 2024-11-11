@@ -17,11 +17,8 @@ public class Application {
         StoreService storeService = new StoreService(storeRepository);
         StoreController storeController = new StoreController(storeService);
 
-        try {
-            storeController.runStore();
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-        }
+        storeController.runStore();
+
         Console.close();
     }
 

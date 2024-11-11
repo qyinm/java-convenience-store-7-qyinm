@@ -10,6 +10,7 @@ import store.domain.Product;
 import store.dtos.ItemInputDto;
 import store.dtos.ReceiptDto;
 import store.service.StoreService;
+import store.utils.exception.RetryExceptionHandler;
 import store.view.InputView;
 import store.view.OutputView;
 
@@ -24,7 +25,7 @@ public class StoreController {
     public void runStore() {
         do {
             noticeCurrentInventory();
-            Cart cart = getUserWantToBuyItems();
+            Cart cart = RetryExceptionHandler.runUntilNoneLottoException(this::getUserWantToBuyItems);
             boolean applyMembershipDiscount = InputView.askGetMembershipDiscount();
 
             ReceiptDto receiptDto = storeService.calculateUserPurchase(cart, applyMembershipDiscount);
