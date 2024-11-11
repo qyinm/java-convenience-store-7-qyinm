@@ -1,6 +1,8 @@
 package store.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static store.exception.store.StoreErrorCode.NOT_FOUND_PRODUCT;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.Product;
 import store.domain.Promotion;
+import store.exception.StoreException;
 import store.repository.StoreRepository;
 
 class StoreServiceTest {
@@ -21,8 +24,6 @@ class StoreServiceTest {
 
     @BeforeEach
     void setUp() {
-        ;
-
         // 프로모션
         Promotion promotion = new Promotion("탄산2+1", BigDecimal.valueOf(2), BigDecimal.valueOf(1),
                 LocalDate.parse("2024-01-01", DATE_FORMATTER), LocalDate.parse("2024-12-31", DATE_FORMATTER));
@@ -188,5 +189,14 @@ class StoreServiceTest {
 
         // Then
         assertThat(updatedProduct.getQuantity()).isEqualTo(BigDecimal.valueOf(7));  // 10 - 3 = 7
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품은 예외를 발생시킨다")
+    void 존재하지_않는_상품은_예외_발생() {
+        // When & Then
+        assertThatThrownBy(() -> storeService.getGeneralProduct("오렌지"))
+                .isInstanceOf(StoreException.class)
+                .hasMessageContaining(NOT_FOUND_PRODUCT.getMessage());
     }
 }
