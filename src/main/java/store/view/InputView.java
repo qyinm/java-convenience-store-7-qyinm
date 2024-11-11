@@ -46,10 +46,7 @@ public class InputView {
     public static boolean askUserGetMoreBonusProduct(String itemName, BigDecimal bonusPrice) {
         OutputView.printAskGetMoreBonusProducts(itemName, bonusPrice);
 
-        String userInput = readLine();
-        validateYesOrNoInputForm(userInput);
-
-        return YES.equals(userInput);
+        return askYesOrNo();
     }
 
     private static void validateYesOrNoInputForm(String userInput) {
@@ -61,6 +58,14 @@ public class InputView {
     public static boolean askFullPricePurchase(String itemName, BigDecimal quantity) {
         OutputView.printAskFullPricePurchasePrefix(itemName, quantity);
 
+        return askYesOrNo();
+    }
+
+    public static boolean askGetMembershipDiscount() {
+        return askYesOrNo();
+    }
+
+    private static boolean askYesOrNo() {
         String userInput = readLine();
         validateYesOrNoInputForm(userInput);
 
