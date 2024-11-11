@@ -118,7 +118,9 @@ public class StoreService {
         return cart.stream().filter(item -> promotionBonusItems.stream()
                         .noneMatch(bonusItem -> bonusItem.product().getName().equals(item.product().getName())))
                 .map(item -> item.getTotalQuantity().multiply(BigDecimal.valueOf(0.3)))
-                .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(0, RoundingMode.FLOOR);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(0, RoundingMode.FLOOR)
+                .min(BigDecimal.valueOf(8000));
     }
 
     private List<Item> getPromotionBonusItems(List<Item> cart) {
