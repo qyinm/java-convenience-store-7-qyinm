@@ -62,6 +62,8 @@ public class InputView {
     }
 
     public static boolean askGetMembershipDiscount() {
+        OutputView.printAskGetMembershipDiscountPrefix();
+
         return askYesOrNo();
     }
 
